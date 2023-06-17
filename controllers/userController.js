@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 
 async function getUsers(_req, res) {
-  const users = await User.find({}).populate("persons");
+  const users = await User.find({});
 
   return res.status(200).json(users);
 }

@@ -26,7 +26,13 @@ async function getPerson(req, res, next) {
 }
 
 async function createPerson(req, res) {
-  const { name, number } = req.body;
+  const {
+    firstName,
+    lastName,
+    contactNumber,
+    purposeOfEntry,
+    visitorIdNumber,
+  } = req.body;
   const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
 
   if (!decodedToken.id) {
@@ -36,12 +42,27 @@ async function createPerson(req, res) {
   const user = await User.findById(decodedToken.id);
 
   const person = new Person({
-    name,
-    number,
+    firstName,
+    lastName,
+    contactNumber,
+    purposeOfEntry,
+    visitorIdNumber,
     user: user._id,
   });
-
+  if (
+    firstName === undefined ||
+    lastName === undefined ||
+    contactNumber === undefined ||
+    purposeOfEntry === undefined ||
+    visitorIdNumber === undefined
+  ) {
+    return res.status(400).json({ error: "Content is missing" });
+  }
+  const personExists = await Person.findOne({ firstName, lastName });
   const savedPerson = await person.save();
+  if (personExists) {
+    return res.status(400).json({ error: "Person already exists" });
+  }
 
   user.persons = user.persons.concat(savedPerson._id);
   await user.save();
