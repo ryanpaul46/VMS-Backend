@@ -14,15 +14,15 @@ const personSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  purposeOfEntry: {
-    type: String,
-
-    required: true,
-  },
-  visitorIdNumber: {
-    type: String,
-    required: true,
-  },
+  // purposeOfEntry: {
+  //   type: String,
+  //   enum: ["enrollment", "meeting"],
+  //   required: true,
+  // },
+  // visitorIdNumber: {
+  //   type: String,
+  //   required: true,
+  // },
   returnedId: {
     type: Boolean,
     default: false,
@@ -39,6 +39,10 @@ const personSchema = new mongoose.Schema({
         minute: "2-digit",
       });
     },
+  },
+  timeExited: {
+    type: String,
+    default: "--",
   },
 
   user: String,

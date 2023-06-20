@@ -10,7 +10,6 @@ import adminRouter from "./routes/adminRouter.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import unknownEndpoint from "./middlewares/unknownEndpoint.js";
 
-
 const app = express();
 const connectToDB = async (url) => {
   await mongoose.connect(url);
@@ -18,7 +17,6 @@ const connectToDB = async (url) => {
 };
 
 connectToDB(config.MONGODB_URI);
-
 
 app.use(cors());
 app.use(express.json());

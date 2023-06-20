@@ -33,12 +33,12 @@ async function createPerson(req, res) {
     purposeOfEntry,
     visitorIdNumber,
   } = req.body;
+
   const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
 
-  if (!decodedToken.id) {
-    return res.status(401).json({ error: "Token missing or invalid" });
+  if (!decodedToken) {
+    return res.status(400).json({ error: "Token missing or invalid" });
   }
-
   const user = await User.findById(decodedToken.id);
 
   const person = new Person({
