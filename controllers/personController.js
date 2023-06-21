@@ -6,7 +6,7 @@ import getTokenFrom from "../utils/getTokenFrom.js";
 import jwt from "jsonwebtoken";
 import config from "../utils/config.js";
 
-async function getPersons(_, res) {
+async function getPersons(req, res) {
   const persons = await Person.find({});
 
   return res.json(persons);
@@ -24,100 +24,94 @@ async function getPerson(req, res, next) {
     next(error);
   }
 }
-
 async function createPerson(req, res) {
-  const {
-    firstName,
-    lastName,
-    contactNumber,
-    purposeOfEntry,
-    visitorIdNumber,
-  } = req.body;
+  const { firstName, lastName, contactNumber, purposeOfEntry } = req.body;
 
   const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
 
   if (!decodedToken) {
     return res.status(400).json({ error: "Token missing or invalid" });
   }
+
   const user = await User.findById(decodedToken.id);
+
+  const currentDate = new Date();
+  const dateVisited = currentDate.toISOString().split("T")[0];
+  const timeVisited = currentDate.toLocaleTimeString();
 
   const person = new Person({
     firstName,
     lastName,
     contactNumber,
     purposeOfEntry,
-    visitorIdNumber,
+    dateVisited,
+    timeVisited,
     user: user._id,
   });
-  if (
-    firstName === undefined ||
-    lastName === undefined ||
-    contactNumber === undefined ||
-    purposeOfEntry === undefined ||
-    visitorIdNumber === undefined
-  ) {
+
+  if (!firstName || !lastName || !contactNumber || !purposeOfEntry) {
     return res.status(400).json({ error: "Content is missing" });
   }
+
   const personExists = await Person.findOne({ firstName, lastName });
-  const savedPerson = await person.save();
   if (personExists) {
     return res.status(400).json({ error: "Person already exists" });
   }
+
+  const savedPerson = await person.save();
 
   user.persons = user.persons.concat(savedPerson._id);
   await user.save();
 
   return res.status(201).json(savedPerson);
 }
+// async function getPersonsByDate(req, res) {
+//   try {
+//     const { dateVisited } = req.params;
 
-async function updatePerson(req, res, next) {
-  const id = req.params.id;
-  const { name, number } = req.body;
+//     const persons = await Person.find({ dateVisited: { $eq: dateVisited } });
 
-  if (name === undefined || number === undefined)
-    return res.status(400).json({ error: "Content is missing" });
+//     res.status(200).json(persons);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).json({ message: error.message });
+//   }
+// }
+// async function getPersonsByPurpose(req, res) {
+//   try {
+//     const { purposeOfEntry } = req.params;
 
-  if (name === "" || number === "")
-    return res.status(400).json({ error: "Name and number are required" });
+//     const persons = await Person.find({
+//       purposeOfEntry: { $eq: purposeOfEntry },
+//     });
 
-  if (!isString(name) || !isString(number))
-    return res.status(400).json({ error: "Name and number must be strings" });
+//     res.status(200).json(persons);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(400).json({ message: error.message });
+//   }
+// }
 
-  const person = {
-    name,
-    number,
-  };
-
+const exitPerson = async (req, res) => {
   try {
-    const updatedPerson = await Person.findByIdAndUpdate(id, person, {
-      new: true,
-      runValidators: true,
-      context: "query",
-    });
+    const { id } = req.params;
+    const person = await Person.findByIdAndUpdate(id, req.body);
 
-    if (updatedPerson) return res.json(updatedPerson);
-
-    return res.status(404).json({ error: "Person not found" });
+    if (!person) {
+      return res.status(404).json({ message: `${id} not found` });
+    }
+    const updatedPerson = await Person.findById(id);
+    res.status(200).json(updatedPerson);
   } catch (error) {
-    next(error);
+    console.log(error);
+    res.status(400).json({ message: error.message });
   }
-}
-
-async function deletePerson(req, res, next) {
-  try {
-    const id = req.params.id;
-    await Person.findByIdAndDelete(id);
-
-    return res.status(204).end();
-  } catch (error) {
-    next(error);
-  }
-}
-
+};
 export default {
   getPersons,
   getPerson,
   createPerson,
-  updatePerson,
-  deletePerson,
+  exitPerson,
+  // getPersonsByDate,
+  // getPersonsByPurpose,
 };
