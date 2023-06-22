@@ -6,6 +6,10 @@ const userSchema = mongoose.Schema({
   username: String,
   name: String,
   passwordHash: String,
+  role: {
+    type: String,
+    enum: ["user", "admin"], //specify the allowed roles here
+  },
   persons: [
     {
       type: mongoose.Schema.Types.ObjectId,

@@ -24,73 +24,76 @@ async function getPerson(req, res, next) {
     next(error);
   }
 }
-async function createPerson(req, res) {
-  const { firstName, lastName, contactNumber, purposeOfEntry } = req.body;
+async function createPerson(req, res, next) {
+  try {
+    const { firstName, lastName, contactNumber, purposeOfEntry } = req.body;
 
-  const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
+    const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
 
-  if (!decodedToken) {
-    return res.status(400).json({ error: "Token missing or invalid" });
+    const user = await User.findById(decodedToken.id);
+
+    const currentDate = new Date();
+    const dateVisited = currentDate.toISOString().split("T")[0];
+    const timeVisited = currentDate.toLocaleTimeString();
+
+    const person = new Person({
+      firstName,
+      lastName,
+      contactNumber,
+      purposeOfEntry,
+      dateVisited,
+      timeVisited,
+      user: user._id,
+    });
+
+    if (!firstName || !lastName || !contactNumber || !purposeOfEntry) {
+      return res.status(400).json({ error: "Content is missing" });
+    }
+
+    const personExists = await Person.findOne({ firstName, lastName });
+    if (personExists) {
+      return res.status(400).json({ error: "Person already exists" });
+    }
+
+    const savedPerson = await person.save();
+
+    user.persons = user.persons.concat(savedPerson._id);
+    await user.save();
+
+    return res.status(201).json(savedPerson);
+  } catch (error) {
+    next(error);
   }
-
-  const user = await User.findById(decodedToken.id);
-
-  const currentDate = new Date();
-  const dateVisited = currentDate.toISOString().split("T")[0];
-  const timeVisited = currentDate.toLocaleTimeString();
-
-  const person = new Person({
-    firstName,
-    lastName,
-    contactNumber,
-    purposeOfEntry,
-    dateVisited,
-    timeVisited,
-    user: user._id,
-  });
-
-  if (!firstName || !lastName || !contactNumber || !purposeOfEntry) {
-    return res.status(400).json({ error: "Content is missing" });
-  }
-
-  const personExists = await Person.findOne({ firstName, lastName });
-  if (personExists) {
-    return res.status(400).json({ error: "Person already exists" });
-  }
-
-  const savedPerson = await person.save();
-
-  user.persons = user.persons.concat(savedPerson._id);
-  await user.save();
-
-  return res.status(201).json(savedPerson);
 }
-// async function getPersonsByDate(req, res) {
-//   try {
-//     const { dateVisited } = req.params;
 
-//     const persons = await Person.find({ dateVisited: { $eq: dateVisited } });
+async function getPersonsByDate(req, res) {
+  try {
+    const { dateVisited } = req.params;
+    const date = new Date(dateVisited);
+    const convertedDate = date.toISOString().split("T")[0];
 
-//     res.status(200).json(persons);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({ message: error.message });
-//   }
-// }
-// async function getPersonsByPurpose(req, res) {
-//   try {
-//     const { purposeOfEntry } = req.params;
+    const persons = await Person.find({ dateVisited: convertedDate });
+    res.status(200).json(persons);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message });
+  }
+}
 
-//     const persons = await Person.find({
-//       purposeOfEntry: { $eq: purposeOfEntry },
-//     });
+async function getPersonsByPurpose(req, res) {
+  try {
+    const { purposeOfEntry } = req.params;
 
-//     res.status(200).json(persons);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(400).json({ message: error.message });
-//   }
-// }
+    const persons = await Person.find({
+      purposeOfEntry: { $eq: purposeOfEntry },
+    });
+
+    res.status(200).json(persons);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: error.message });
+  }
+}
 
 const exitPerson = async (req, res) => {
   try {
@@ -112,6 +115,6 @@ export default {
   getPerson,
   createPerson,
   exitPerson,
-  // getPersonsByDate,
-  // getPersonsByPurpose,
+  getPersonsByDate,
+  getPersonsByPurpose,
 };
