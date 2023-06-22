@@ -15,7 +15,8 @@ const personSchema = new mongoose.Schema({
     type: String,
   },
   dateVisited: {
-    type: String,
+    type: Date,
+    default: Date.now,
   },
   timeVisited: {
     type: String,
@@ -31,6 +32,9 @@ personSchema.set("toJSON", {
     returnedObject.id = returnedObject._id;
     delete returnedObject._id;
     delete returnedObject.__v;
+    returnedObject.dateVisited = returnedObject.dateVisited
+      .toISOString()
+      .split("T")[0];
   },
 });
 
