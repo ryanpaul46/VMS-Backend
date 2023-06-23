@@ -24,6 +24,30 @@ async function getPerson(req, res, next) {
     next(error);
   }
 }
+async function getPersonByFirstName(req, res, next) {
+  try {
+    const { firstName } = req.params;
+    const person = await Person.find({ firstName });
+
+    if (person) return res.json(person);
+
+    return res.status(404).json({ error: "Person not found" });
+  } catch (error) {
+    next(error);
+  }
+}
+async function getPersonByLastName(req, res, next) {
+  try {
+    const { lastName } = req.params;
+    const person = await Person.find({ lastName });
+
+    if (person) return res.json(person);
+
+    return res.status(404).json({ error: "Person not found" });
+  } catch (error) {
+    next(error);
+  }
+}
 async function createPerson(req, res, next) {
   try {
     const { firstName, lastName, contactNumber, purposeOfEntry } = req.body;
@@ -117,4 +141,6 @@ export default {
   exitPerson,
   getPersonsByDate,
   getPersonsByPurpose,
+  getPersonByFirstName,
+  getPersonByLastName,
 };
