@@ -9,6 +9,9 @@ personRouter.get("/:id", personController.getPerson);
 personRouter.post("/", personController.createPerson);
 personRouter.put("/:id", personController.exitPerson);
 personRouter.get("/date/:dateVisited", personController.getPersonsByDate);
-personRouter.get("/:purposeOfEntry", personController.getPersonsByPurpose);
+personRouter.get(
+  "/purpose/:purposeOfEntry",
+  personController.getPersonsByPurpose
+);
 
 export default personRouter;
