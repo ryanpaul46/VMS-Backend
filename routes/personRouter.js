@@ -18,6 +18,7 @@ personRouter.get(
   personController.getPersonsByPurpose
 );
 personRouter.post("/", personController.createPerson);
-personRouter.put("/:id", personController.exitPerson);
+personRouter.put("/:id", personController.updatePerson);
+personRouter.post("/exit/:id", personController.exitPerson);
 
 export default personRouter;

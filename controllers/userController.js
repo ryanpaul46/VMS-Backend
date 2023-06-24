@@ -37,8 +37,56 @@ async function createUser(req, res, next) {
     next(error);
   }
 }
+const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { password, ...updateData } = req.body; // Exclude password from updateData
+
+    if (password) {
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+      updateData.passwordHash = passwordHash; // Add hashed password to updateData
+    }
+
+    const user = await User.findByIdAndUpdate(id, updateData);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: `Cannot find user with id ${id}` });
+    }
+    const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
+
+    const admin = await Admin.findById(decodedToken.id);
+
+    const updatedUser = await User.findById(id);
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+const deleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
+
+    const admin = await Admin.findById(decodedToken.id);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: `Cannot find user with id ${id}` });
+    }
+    return res
+      .status(200)
+      .json({ message: `Successfully delete ${user.name}` });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default {
   createUser,
   getUsers,
+  updateUser,
+  deleteUser,
 };

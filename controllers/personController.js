@@ -50,16 +50,17 @@ async function getPersonByLastName(req, res, next) {
 }
 async function createPerson(req, res, next) {
   try {
+    //1. get the needed data
     const { firstName, lastName, contactNumber, purposeOfEntry } = req.body;
-
+    //2. we decode the token
     const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
-
+    //3. we check if the token is valid
     const user = await User.findById(decodedToken.id);
-
+    //4. we convert the date
     const currentDate = new Date();
     const dateVisited = currentDate.toISOString().split("T")[0];
     const timeVisited = currentDate.toLocaleTimeString();
-
+    //5. we create person object
     const person = new Person({
       firstName,
       lastName,
@@ -69,7 +70,7 @@ async function createPerson(req, res, next) {
       timeVisited,
       user: user._id,
     });
-
+    //6. we handle missing data
     if (!firstName || !lastName || !contactNumber || !purposeOfEntry) {
       return res.status(400).json({ error: "Content is missing" });
     }
@@ -118,7 +119,27 @@ async function getPersonsByPurpose(req, res) {
     res.status(400).json({ message: error.message });
   }
 }
-
+const updatePerson = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const person = await Person.findByIdAndUpdate(id, req.body);
+    if (!person) {
+      return res
+        .status(400)
+        .json({ message: `cannot find person with id ${id}` });
+    }
+    if (person.timeExited) {
+      return res.status(400).json({
+        message: `This person have already exited at ${person.timeExited} and cannot be updated`,
+      });
+    }
+    const updatedPerson = await Person.findById(id);
+    res.status(200).json(updatedPerson);
+  } catch (error) {
+    console.log(error);
+    res.status(204).json({ message: error.message });
+  }
+};
 const exitPerson = async (req, res) => {
   try {
     const { id } = req.params;
@@ -138,9 +159,10 @@ export default {
   getPersons,
   getPerson,
   createPerson,
-  exitPerson,
   getPersonsByDate,
   getPersonsByPurpose,
   getPersonByFirstName,
   getPersonByLastName,
+  updatePerson,
+  exitPerson,
 };

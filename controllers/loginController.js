@@ -41,12 +41,12 @@ async function adminlogin(req, res) {
     });
   }
 
-  const userForToken = {
+  const adminForToken = {
     username: admin.username,
     id: admin._id,
   };
 
-  const token = jwt.sign(userForToken, config.SECRET);
+  const token = jwt.sign(adminForToken, config.SECRET);
 
   res.status(200).send({ token, username: admin.username, name: admin.name });
 }
