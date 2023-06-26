@@ -27,9 +27,18 @@ async function createUser(req, res, next) {
       name,
       passwordHash,
       role,
-
       admin: admin._id,
     });
+    if (!name || !username) {
+      return res.status(400).json({ error: "Content is missing" });
+    }
+
+    const userExists = await User.findOne({ name, username });
+    if (userExists) {
+      return res
+        .status(400)
+        .json({ error: "username or name is already used." });
+    }
     const savedUser = await user.save();
     admin.users = admin.users.concat(savedUser._id);
     await admin.save();
@@ -41,17 +50,14 @@ async function createUser(req, res, next) {
 const updateUser = async (req, res, next) => {
   try {
     const { id_2 } = req.params;
-    const { password, ...updateData } = req.body; // Exclude password from updateData
-
+    const { password, ...updateData } = req.body;
     if (password) {
       const saltRounds = 10;
       const passwordHash = await bcrypt.hash(password, saltRounds);
-      updateData.passwordHash = passwordHash; // Add hashed password to updateData
+      updateData.passwordHash = passwordHash;
     }
 
-    const user = await User.findOneAndUpdate({ id_2 }, updateData, {
-      new: true,
-    });
+    const user = await User.findOneAndUpdate({ id_2 }, updateData);
 
     if (!user) {
       return res

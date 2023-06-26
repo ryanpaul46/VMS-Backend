@@ -1,4 +1,3 @@
-/* eslint-disable linebreak-style */
 import mongoose from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
 
@@ -8,7 +7,7 @@ const userSchema = mongoose.Schema({
   passwordHash: String,
   role: {
     type: String,
-    enum: ["user", "admin"], //specify the allowed roles here
+    enum: ["user", "admin"], // Specify the allowed roles here
   },
   persons: [
     {
@@ -19,7 +18,7 @@ const userSchema = mongoose.Schema({
   admin: String,
   id_2: {
     type: String,
-    default: () => Math.random().toString(36).substr(2, 9), // Generate a random string
+    unique: true,
   },
 });
 
@@ -33,6 +32,17 @@ userSchema.set("toJSON", {
     delete returnedObject.__v;
     delete returnedObject.passwordHash;
   },
+});
+
+// Generate unique id_2 value before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isNew) {
+    return next();
+  }
+
+  const generatedId = Math.random().toString(36).substr(2, 9);
+  this.id_2 = generatedId;
+  next();
 });
 
 const User = mongoose.model("User", userSchema);
