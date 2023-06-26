@@ -27,6 +27,7 @@ async function createUser(req, res, next) {
       name,
       passwordHash,
       role,
+
       admin: admin._id,
     });
     const savedUser = await user.save();
@@ -39,7 +40,7 @@ async function createUser(req, res, next) {
 }
 const updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id_2 } = req.params;
     const { password, ...updateData } = req.body; // Exclude password from updateData
 
     if (password) {
@@ -48,22 +49,26 @@ const updateUser = async (req, res, next) => {
       updateData.passwordHash = passwordHash; // Add hashed password to updateData
     }
 
-    const user = await User.findByIdAndUpdate(id, updateData);
+    const user = await User.findOneAndUpdate({ id_2 }, updateData, {
+      new: true,
+    });
+
     if (!user) {
       return res
         .status(400)
-        .json({ message: `Cannot find user with id ${id}` });
+        .json({ message: `Cannot find user with id_2 ${id_2}` });
     }
-    const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
 
+    const decodedToken = jwt.verify(getTokenFrom(req), config.SECRET);
     const admin = await Admin.findById(decodedToken.id);
 
-    const updatedUser = await User.findById(id);
+    const updatedUser = await User.findById(user._id);
     res.status(200).json(updatedUser);
   } catch (error) {
     next(error);
   }
 };
+
 const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;

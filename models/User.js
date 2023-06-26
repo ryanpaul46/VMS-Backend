@@ -17,6 +17,10 @@ const userSchema = mongoose.Schema({
     },
   ],
   admin: String,
+  id_2: {
+    type: String,
+    default: () => Math.random().toString(36).substr(2, 9), // Generate a random string
+  },
 });
 
 userSchema.plugin(uniqueValidator);
@@ -24,6 +28,7 @@ userSchema.plugin(uniqueValidator);
 userSchema.set("toJSON", {
   transform: (_document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
+
     delete returnedObject._id;
     delete returnedObject.__v;
     delete returnedObject.passwordHash;
