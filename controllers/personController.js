@@ -11,7 +11,6 @@ async function getPersons(req, res) {
 
   return res.json(persons);
 }
-
 async function getPerson(req, res, next) {
   try {
     const { id } = req.params;
@@ -24,6 +23,7 @@ async function getPerson(req, res, next) {
     next(error);
   }
 }
+
 async function getPersonByFirstName(req, res, next) {
   try {
     const { firstName } = req.params;
